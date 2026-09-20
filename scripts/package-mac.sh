@@ -2,7 +2,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="$ROOT/release/Hailstone"
+TAG="${HAILSTONE_VERSION:-dev}"
+BUNDLE_VERSION="${TAG#v}"
+OUT="$ROOT/release/Hailstone-${TAG}"
 APP="$OUT/Hailstone.app"
 WEB="$APP/Contents/Resources/web"
 
@@ -13,7 +15,7 @@ rm -rf "$OUT"
 mkdir -p "$APP/Contents/MacOS" "$WEB"
 cp -R "$ROOT/dist/." "$WEB/"
 
-cat > "$APP/Contents/Info.plist" <<'EOF'
+cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -25,9 +27,9 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
   <key>CFBundleIdentifier</key>
   <string>local.hailstone</string>
   <key>CFBundleVersion</key>
-  <string>3</string>
+  <string>${BUNDLE_VERSION}</string>
   <key>CFBundleShortVersionString</key>
-  <string>3.0</string>
+  <string>${BUNDLE_VERSION}</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleExecutable</key>

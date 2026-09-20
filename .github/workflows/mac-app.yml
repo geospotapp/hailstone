@@ -4,22 +4,29 @@ on:
   push:
     tags:
       - "*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Lightweight release tag to build (e.g. v0.1.0)
+        required: true
+        type: string
 
 jobs:
   package:
     runs-on: macos-latest
     permissions:
       contents: write
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
-      - name: Checkout
+      - name: Checkout tag
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
+          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Require lightweight tag on main
-        env:
-          TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           kind="$(git cat-file -t "refs/tags/${TAG}")"
@@ -28,11 +35,12 @@ jobs:
             exit 1
           fi
           git fetch origin main
-          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
-            echo "Tag ${TAG} (${GITHUB_SHA}) is not on origin/main."
+          tagged="$(git rev-parse "refs/tags/${TAG}^{}")"
+          if ! git merge-base --is-ancestor "${tagged}" origin/main; then
+            echo "Tag ${TAG} (${tagged}) is not on origin/main."
             exit 1
           fi
-          echo "Lightweight tag ${TAG} is on main."
+          echo "Lightweight tag ${TAG} (${tagged}) is on main."
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -44,25 +52,33 @@ jobs:
         run: npm ci
 
       - name: Package Mac app
+        env:
+          HAILSTONE_VERSION: ${{ env.TAG }}
         run: npm run package:mac
 
       - name: Zip app
         run: |
+          test -d "release/Hailstone-${TAG}"
           cd release
-          zip -ry "../hailstone-mac-${GITHUB_REF_NAME}.zip" Hailstone
+          zip -ry "../hailstone-${TAG}.zip" "Hailstone-${TAG}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hailstone-mac-${{ github.ref_name }}
-          path: hailstone-mac-${{ github.ref_name }}.zip
+          name: hailstone-${{ env.TAG }}
+          path: hailstone-${{ env.TAG }}.zip
           if-no-files-found: error
+          overwrite: true
 
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            "hailstone-mac-${GITHUB_REF_NAME}.zip" \
-            --title "${GITHUB_REF_NAME}" \
-            --notes "Mac app for ${GITHUB_REF_NAME}."
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release upload "${TAG}" "hailstone-${TAG}.zip" --clobber
+          else
+            gh release create "${TAG}" \
+              "hailstone-${TAG}.zip" \
+              --title "${TAG}" \
+              --notes "Mac app for ${TAG}."
+          fi
