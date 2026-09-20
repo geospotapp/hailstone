@@ -58,7 +58,17 @@ jobs:
 
       - name: Zip app
         run: |
-          test -d "release/Hailstone-${TAG}"
+          set -euo pipefail
+          mkdir -p release
+          if [ ! -d "release/Hailstone-${TAG}" ]; then
+            if [ -d release/Hailstone ]; then
+              mv release/Hailstone "release/Hailstone-${TAG}"
+            else
+              echo "Mac app folder not found in release/"
+              ls -la release || true
+              exit 1
+            fi
+          fi
           cd release
           zip -ry "../hailstone-${TAG}.zip" "Hailstone-${TAG}"
 
