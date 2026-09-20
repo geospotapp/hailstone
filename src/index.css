@@ -1,0 +1,287 @@
+:root {
+  color-scheme: dark;
+  --bg: #141414;
+  --text: #f0f0f0;
+  --text-2: rgba(240, 240, 240, 0.74);
+  --text-3: rgba(240, 240, 240, 0.6);
+  --text-4: rgba(240, 240, 240, 0.36);
+  --fill: rgba(240, 240, 240, 0.08);
+  --fill-2: rgba(240, 240, 240, 0.14);
+  --stroke: rgba(240, 240, 240, 0.12);
+  --stroke-2: rgba(240, 240, 240, 0.2);
+  --accent: #4d9fff;
+  --on-accent: #141414;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+}
+
+#root {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+h1 {
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 590;
+  margin: 0;
+}
+
+h2 {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 590;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lede {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.controls {
+  gap: 12px;
+}
+
+.zoom-row {
+  gap: 8px;
+}
+
+.legend {
+  gap: 16px;
+}
+
+.legend-item {
+  gap: 6px;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  display: inline-block;
+}
+
+.dot.odd {
+  background: var(--accent);
+}
+
+.dot.even {
+  background: var(--fill-2);
+  border: 1px solid var(--stroke-2);
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.hint {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.caption {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.field {
+  width: 168px;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--text);
+  background: var(--fill);
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+}
+
+.field:focus {
+  outline: 1px solid var(--accent);
+  border-color: var(--accent);
+}
+
+.field-deg {
+  width: 64px;
+}
+
+.select-seq {
+  width: 200px;
+}
+
+.pill {
+  height: 28px;
+  padding: 0 10px;
+  color: var(--text-2);
+  background: transparent;
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pill.active {
+  color: var(--text);
+  background: var(--fill-2);
+  border-color: var(--stroke-2);
+}
+
+.btn {
+  height: 28px;
+  padding: 0 10px;
+  color: var(--text);
+  background: var(--fill-2);
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 590;
+  overflow-wrap: anywhere;
+}
+
+.stat-label {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.plot-wrap {
+  width: 100%;
+  user-select: none;
+}
+
+.plot-wrap svg {
+  display: block;
+}
+
+.sequence {
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sequence summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--fill);
+  list-style: none;
+}
+
+.sequence summary::-webkit-details-marker {
+  display: none;
+}
+
+.table-wrap {
+  max-height: 320px;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  font-weight: 500;
+  background: var(--bg);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+tr:nth-child(even) td {
+  background: var(--fill);
+}
+
+.grow {
+  flex: 1;
+}
+
+@media (max-width: 700px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
