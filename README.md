@@ -7,6 +7,7 @@ Polar plots of integer sequences. Radius is the term; the largest value sits on 
 **Halting maps** (start from *n*, stop at 1, 0, a cycle, a palindrome, or the step cap):
 
 - Collatz 3n+1
+- 5n+1
 - Juggler
 - Happy numbers
 - Aliquot
@@ -15,8 +16,9 @@ Polar plots of integer sequences. Radius is the term; the largest value sits on 
 
 **Open-ended** (plot the first *N* terms):
 
-- Fibonacci, Lucas, Pell, Padovan
+- Fibonacci, Lucas, Pell, Padovan, subprime Fibonacci
 - Recamán
+- Yellowstone, Van Eck, Stern diatomic, ruler, Golomb
 - Hofstadter Q
 - Primes
 - Triangular

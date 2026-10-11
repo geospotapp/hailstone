@@ -9,6 +9,8 @@ import {
   ZOOM_MIN,
   clampPan,
   catmullRomPath,
+  formatDigits,
+  polarFromLog10,
   polarPoint,
   ringValue,
   zoomToward,
@@ -57,6 +59,8 @@ function parseDegrees(raw: string): number {
 function PolarPlot({
   sequence,
   peak,
+  log10,
+  labels,
   degrees,
   label,
   smooth,
@@ -64,6 +68,8 @@ function PolarPlot({
 }: {
   sequence: number[]
   peak: number
+  log10?: number[]
+  labels?: string[]
   degrees: number
   label: string
   smooth: boolean
@@ -89,20 +95,38 @@ function PolarPlot({
 
   const delta = (degrees * Math.PI) / 180
   const scale = Math.max(peak, 1)
-  const peakIndex = sequence.indexOf(peak)
-  const points = sequence.map((value, index) => ({
-    ...polarPoint(value, index, scale, delta, radiusScale),
-    value,
-    index,
-    odd: value % 2 === 1,
-  }))
+  const peakLog10 = log10 && log10.length > 0 ? Math.max(...log10) : undefined
+  const peakIndex =
+    log10 && log10.length > 0
+      ? log10.reduce((best, value, index, all) => (value > all[best] ? index : best), 0)
+      : sequence.indexOf(peak)
+  const points = sequence.map((value, index) => {
+    const text = labels?.[index]
+    const mag = log10?.[index]
+    const pos =
+      mag !== undefined && peakLog10 !== undefined
+        ? polarFromLog10(mag, index, peakLog10, delta, radiusScale)
+        : polarPoint(value, index, scale, delta, radiusScale)
+    return {
+      ...pos,
+      value,
+      index,
+      text,
+      odd: text ? Number(text.at(-1)) % 2 === 1 : value % 2 === 1,
+    }
+  })
   const line = points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')
   const curve = catmullRomPath(points)
-  const rings = [0.25, 0.5, 0.75, 1].map((frac) => ({
-    frac,
-    r: frac * PLOT_RADIUS,
-    label: Math.round(ringValue(frac, scale, radiusScale)).toLocaleString(),
-  }))
+  const rings = [0.25, 0.5, 0.75, 1].map((frac) => {
+    let ring = Math.round(ringValue(frac, scale, radiusScale)).toLocaleString()
+    if (peakLog10 !== undefined && peakLog10 > 0) {
+      const mag = radiusScale === 'log' ? frac * peakLog10 : peakLog10 + Math.log10(frac)
+      const exp = Math.floor(mag)
+      const mant = 10 ** (mag - exp)
+      ring = mag < 15 ? Math.round(10 ** mag).toLocaleString() : `${mant.toFixed(2)}×10^${exp}`
+    }
+    return { frac, r: frac * PLOT_RADIUS, label: ring }
+  })
   const hovered = hover === null ? null : points[hover]
   const start = points[0]
   const peakPt = points[peakIndex]
@@ -290,7 +314,7 @@ function PolarPlot({
             fontSize={12 * k}
             fontWeight={590}
           >
-            {start.value.toLocaleString()}
+            {start.text ? formatDigits(start.text, true) : start.value.toLocaleString()}
           </text>
           {peakIndex > 0 ? (
             <text
@@ -299,7 +323,7 @@ function PolarPlot({
               fill={theme.text2}
               fontSize={11 * k}
             >
-              peak {peak.toLocaleString()}
+              peak {peakPt.text ? formatDigits(peakPt.text, true) : peak.toLocaleString()}
             </text>
           ) : null}
           {hovered && hovered.index !== 0 && hovered.value !== peak ? (
@@ -309,7 +333,7 @@ function PolarPlot({
               fill={theme.text}
               fontSize={11 * k}
             >
-              step {hovered.index}: {hovered.value.toLocaleString()}
+              step {hovered.index}: {hovered.text ? formatDigits(hovered.text, true) : hovered.value.toLocaleString()}
             </text>
           ) : null}
         </svg>
@@ -330,8 +354,14 @@ export default function App() {
   const degrees = parseDegrees(angle)
   const run = useMemo(() => def.generate(n), [def, n])
   const sequence = run.values
+  const peakStep =
+    run.log10 && run.log10.length > 0
+      ? run.log10.reduce((best, value, index, all) => (value > all[best] ? index : best), 0)
+      : sequence.indexOf(Math.max(0, ...sequence))
   const peak = Math.max(0, ...sequence)
-  const peakStep = sequence.indexOf(peak)
+  const peakText = run.labels?.[peakStep]
+    ? formatDigits(run.labels[peakStep], true)
+    : peak.toLocaleString()
   const steps = Math.max(0, sequence.length - 1)
 
   return (
@@ -339,12 +369,14 @@ export default function App() {
       <div className="stack" style={{ gap: 6 }}>
         <h1>{def.name}</h1>
         <p className="lede">{def.blurb}</p>
+        <p className="lede">{def.history}</p>
         <p className="lede">
           Radius is n or log n (your choice). The largest term sits on the rim;
           the first term is straight up, then clockwise.
         </p>
       </div>
 
+      <div className="stack controls-stack">
       <div className="row controls">
         <span className="label">Sequence</span>
         <select
@@ -382,7 +414,8 @@ export default function App() {
             {example}
           </button>
         ))}
-        <span className="grow" />
+      </div>
+      <div className="row controls">
         <span className="muted">Degrees per step</span>
         <input
           className="field field-deg"
@@ -409,6 +442,8 @@ export default function App() {
         >
           Smooth curve
         </button>
+      </div>
+      <div className="row controls">
         <span className="muted">Radius</span>
         <button
           type="button"
@@ -425,6 +460,7 @@ export default function App() {
           log n
         </button>
       </div>
+      </div>
 
       <div className="stats">
         <div>
@@ -436,7 +472,7 @@ export default function App() {
           <div className="stat-label">{def.kind === 'count' ? 'Terms after first' : 'Steps'}</div>
         </div>
         <div>
-          <div className="stat-value">{peak.toLocaleString()}</div>
+          <div className="stat-value">{peakText}</div>
           <div className="stat-label">Peak (rim)</div>
         </div>
         <div>
@@ -461,6 +497,8 @@ export default function App() {
         <PolarPlot
           sequence={sequence}
           peak={peak}
+          log10={run.log10}
+          labels={run.labels}
           degrees={degrees}
           label={def.name}
           smooth={smooth}
@@ -492,7 +530,7 @@ export default function App() {
               {sequence.map((value, i) => (
                 <tr key={i}>
                   <td className="num">{i}</td>
-                  <td className="num">{value.toLocaleString()}</td>
+                  <td className="num term">{run.labels?.[i] ? formatDigits(run.labels[i]) : value.toLocaleString()}</td>
                   <td>{run.rules[i] ?? ''}</td>
                 </tr>
               ))}

@@ -32,7 +32,7 @@ body {
 }
 
 #root {
-  max-width: 920px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 32px 24px 64px;
 }
@@ -81,6 +81,10 @@ select {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.controls-stack {
+  gap: 10px;
 }
 
 .controls {
@@ -214,6 +218,8 @@ select {
 
 .plot-wrap {
   width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
   user-select: none;
 }
 
@@ -270,6 +276,10 @@ th {
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.term {
+  word-break: break-all;
 }
 
 tr:nth-child(even) td {

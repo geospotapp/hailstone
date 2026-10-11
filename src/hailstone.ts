@@ -60,6 +60,24 @@ export function radiusOf(value: number, peak: number, scale: RadiusScale): numbe
   return (Math.log(value) / Math.log(peak)) * PLOT_RADIUS
 }
 
+export function radiusFromLog10(log10: number, peakLog10: number, scale: RadiusScale): number {
+  if (!(peakLog10 > 0)) return 0
+  if (scale === 'log') {
+    if (!(log10 > 0)) return 0
+    return (log10 / peakLog10) * PLOT_RADIUS
+  }
+  const ratio = 10 ** (log10 - peakLog10)
+  if (!Number.isFinite(ratio) || ratio <= 0) return log10 >= peakLog10 ? PLOT_RADIUS : 0
+  return Math.min(1, ratio) * PLOT_RADIUS
+}
+
+export function formatDigits(token: string, compact = false): string {
+  if (!compact && token.length <= 80) return token.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  if (token.length <= 16) return token.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const exp = token.length - 1
+  return `${token[0]}.${token.slice(1, 4)}×10^${exp}`
+}
+
 export function ringValue(frac: number, peak: number, scale: RadiusScale): number {
   if (scale === 'log') {
     if (peak <= 1) return frac * Math.max(peak, 0)
@@ -76,6 +94,21 @@ export function polarPoint(
   scale: RadiusScale = 'linear',
 ) {
   const r = radiusOf(value, peak, scale)
+  const theta = START_ANGLE - index * delta
+  return {
+    x: CENTER + r * Math.cos(theta),
+    y: CENTER - r * Math.sin(theta),
+  }
+}
+
+export function polarFromLog10(
+  log10: number,
+  index: number,
+  peakLog10: number,
+  delta: number,
+  scale: RadiusScale = 'linear',
+) {
+  const r = radiusFromLog10(log10, peakLog10, scale)
   const theta = START_ANGLE - index * delta
   return {
     x: CENTER + r * Math.cos(theta),
